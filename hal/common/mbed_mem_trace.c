@@ -29,10 +29,10 @@
 static uint8_t mem_trace_mask = MBED_MEM_TRACE_DISABLE;
 /* The callback function that will be called after a traced memory operations finishes. */
 static mbed_mem_trace_cb_t mem_trace_cb;
-/* 'already_tracing' guards "trace inside trace" situations (for example, the implementation
+/* 'trave_level' guards "trace inside trace" situations (for example, the implementation
  * of realloc() might call malloc() internally, and since malloc() is also traced, this could
  * result in two calls to the callback function instead of one. */
-static uint8_t already_tracing;
+static uint8_t trace_level;
 
 /******************************************************************************
  * Public interface
@@ -44,49 +44,41 @@ void mbed_mem_trace_setup(uint8_t mask, mbed_mem_trace_cb_t cb) {
 }
 
 void* mbed_mem_trace_malloc(void *res, size_t size) {
-    uint8_t expected = 0;
-
     if (mem_trace_cb && (mem_trace_mask & MBED_MEM_TRACE_MALLOC)) {
-        if (core_util_atomic_cas_u8(&already_tracing, &expected, 1)) {
+        if (core_util_atomic_incr_u8(&trace_level, 1) == 1) {
             mem_trace_cb(MBED_MEM_TRACE_MALLOC, res, MBED_CALLER_ADDR(), size);
-            already_tracing = 0;
         }
+        core_util_atomic_decr_u8(&trace_level, 1);
     }
     return res;
 }
 
 void* mbed_mem_trace_realloc(void *res, void *ptr, size_t size) {
-    uint8_t expected = 0;
-
     if (mem_trace_cb && (mem_trace_mask & MBED_MEM_TRACE_REALLOC)) {
-        if (core_util_atomic_cas_u8(&already_tracing, &expected, 1)) {
+        if (core_util_atomic_incr_u8(&trace_level, 1) == 1) {
             mem_trace_cb(MBED_MEM_TRACE_REALLOC, res, MBED_CALLER_ADDR(), ptr, size);
-            already_tracing = 0;
         }
+        core_util_atomic_decr_u8(&trace_level, 1);
     }
     return res;
 }
 
 void* mbed_mem_trace_calloc(void *res, size_t num, size_t size) {
-    uint8_t expected = 0;
-
     if (mem_trace_cb && (mem_trace_mask & MBED_MEM_TRACE_CALLOC)) {
-        if (core_util_atomic_cas_u8(&already_tracing, &expected, 1)) {
+        if (core_util_atomic_incr_u8(&trace_level, 1) == 1) {
             mem_trace_cb(MBED_MEM_TRACE_CALLOC, res, MBED_CALLER_ADDR(), num, size);
-            already_tracing = 0;
         }
+        core_util_atomic_decr_u8(&trace_level, 1);
     }
     return res;
 }
 
 void mbed_mem_trace_free(void *ptr) {
-    uint8_t expected = 0;
-
     if (mem_trace_cb && (mem_trace_mask & MBED_MEM_TRACE_FREE)) {
-        if (core_util_atomic_cas_u8(&already_tracing, &expected, 1)) {
+        if (core_util_atomic_incr_u8(&trace_level, 1) == 1) {
             mem_trace_cb(MBED_MEM_TRACE_FREE, NULL, MBED_CALLER_ADDR(), ptr);
-            already_tracing = 0;
         }
+        core_util_atomic_decr_u8(&trace_level, 1);
     }
 }
 
