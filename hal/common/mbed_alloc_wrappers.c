@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "api/mbed_mem_trace.h"
+#include "mbed_mem_trace.h"
 #include <stddef.h>
 #include <stdio.h>
 

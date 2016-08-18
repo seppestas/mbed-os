@@ -17,9 +17,9 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include "api/mbed_mem_trace.h"
-#include "api/critical.h"
-#include "api/toolchain.h"
+#include "mbed_mem_trace.h"
+#include "critical.h"
+#include "toolchain.h"
 
 /******************************************************************************
  * Internal variables, functions and helpers
