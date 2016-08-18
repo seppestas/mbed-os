@@ -263,4 +263,17 @@ typedef int FILEHANDLE;
 #define EXTERN extern
 #endif
 
+/**
+ * Helper function that identifies the caller of a function
+ *
+ * @return Address of the calling function
+ */
+#if defined(TOOLCHAIN_ARM)
+    #define MBED_CALLER_ADDR() __builtin_return_address(0)
+#elif defined(TOOLCHAIN_GCC)
+    #define MBED_CALLER_ADDR() __builtin_extract_return_addr(__builtin_return_address(0))
+#else
+    #define MBED_CALLER_ADDR() (NULL)
+#endif
+
 #endif
